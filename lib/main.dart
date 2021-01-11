@@ -4,6 +4,26 @@ void main() {
   runApp(MyApp());
 }
 
+// standard class Post
+class Post {
+  String body;
+  String author;
+  int likes = 0;
+  bool userLiked = false;
+
+  Post(this.body, this.author);
+
+  void likePost() {
+    this.userLiked = !this.userLiked;
+
+    if (this.userLiked) {
+      this.likes += 1;
+    } else {
+      this.likes -= 1;
+    }
+  }
+}
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -25,11 +45,11 @@ class MyHomepage extends StatefulWidget {
 }
 
 class _MyHomepageState extends State<MyHomepage> {
-  String text = '';
+  List<Post> posts = [];
 
-  void changedText(String text) {
+  void newPost(String text) {
     this.setState(() {
-      this.text = text;
+      posts.add(new Post(text, 'irfan'));
     });
   }
 
@@ -41,8 +61,8 @@ class _MyHomepageState extends State<MyHomepage> {
       ),
       body: Column(
         children: [
-          TextInputWidget(this.changedText),
-          Text(this.text),
+          Expanded(child: PostsList(this.posts)),
+          TextInputWidget(this.newPost),
         ],
       ),
     );
@@ -72,6 +92,9 @@ class _TextInputWidgetState extends State<TextInputWidget> {
 
   void onClick() {
     widget.callback(textEditingController.text);
+    textEditingController.clear();
+
+    FocusScope.of(context).unfocus();
   }
 
   @override
@@ -92,6 +115,64 @@ class _TextInputWidgetState extends State<TextInputWidget> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class PostsList extends StatefulWidget {
+  final List<Post> listItems;
+
+  PostsList(this.listItems);
+
+  @override
+  _PostsListState createState() => _PostsListState();
+}
+
+class _PostsListState extends State<PostsList> {
+  void like(Function callback) {
+    this.setState(() {
+      callback();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: this.widget.listItems.length,
+      itemBuilder: (BuildContext context, int index) {
+        var post = this.widget.listItems[index];
+
+        return Card(
+          child: Row(
+            children: [
+              Expanded(
+                child: ListTile(
+                  title: Text(post.body),
+                  subtitle: Text(post.author),
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                    child: Text(
+                      post.likes.toString(),
+                      style: TextStyle(
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.thumb_up),
+                    onPressed: () => like(post.likePost),
+                    color: post.userLiked ? Colors.green : Colors.red,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
